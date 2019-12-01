@@ -15,7 +15,6 @@ public struct ArrayChangeEvent {
     public let updatedIndices: [Int]
 
     fileprivate init(inserted: [Int] = [], deleted: [Int] = [], updated: [Int] = []) {
-        assert(inserted.count + deleted.count + updated.count > 0)
         insertedIndices = inserted
         deletedIndices = deleted
         updatedIndices = updated
@@ -25,7 +24,7 @@ public struct ArrayChangeEvent {
 public struct ObservableArray<Element>: ExpressibleByArrayLiteral {
     public typealias EventType = ArrayChangeEvent
 
-    internal var eventSubject: PublishSubject<EventType>!
+    internal var eventSubject: BehaviorSubject<EventType>!
     internal var elementsSubject: BehaviorSubject<[Element]>!
     internal var elements: [Element]
 
@@ -56,7 +55,11 @@ extension ObservableArray {
 
     public mutating func rx_events() -> Observable<EventType> {
         if eventSubject == nil {
-            eventSubject = PublishSubject<EventType>()
+            if elements.count > 0 {
+                eventSubject = BehaviorSubject<EventType>(value: ArrayChangeEvent(inserted: Array(0...elements.count-1), deleted: [], updated: []))
+            } else {
+                eventSubject = BehaviorSubject<EventType>(value: ArrayChangeEvent(inserted: [], deleted: [], updated: []))
+            }
         }
         return eventSubject
     }
