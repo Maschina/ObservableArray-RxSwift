@@ -15,6 +15,7 @@ public struct ArrayChangeEvent {
     public let updatedIndices: [Int]
 
     fileprivate init(inserted: [Int] = [], deleted: [Int] = [], updated: [Int] = []) {
+        assert(inserted.count + deleted.count + updated.count > 0)
         insertedIndices = inserted
         deletedIndices = deleted
         updatedIndices = updated
@@ -55,11 +56,7 @@ extension ObservableArray {
 
     public mutating func rx_events() -> Observable<EventType> {
         if eventSubject == nil {
-            if elements.count > 0 {
-                eventSubject = BehaviorSubject<EventType>(value: ArrayChangeEvent(inserted: Array(0...elements.count-1), deleted: [], updated: []))
-            } else {
-                eventSubject = BehaviorSubject<EventType>(value: ArrayChangeEvent(inserted: [], deleted: [], updated: []))
-            }
+            eventSubject = BehaviorSubject<EventType>(value: ArrayChangeEvent(inserted: Array(0...elements.count-1), deleted: [], updated: []))
         }
         return eventSubject
     }
@@ -67,6 +64,10 @@ extension ObservableArray {
     fileprivate func arrayDidChange(_ event: EventType) {
         elementsSubject?.onNext(elements)
         eventSubject?.onNext(event)
+    }
+    
+    public func elementDidUpdate(index: Int) {
+        arrayDidChange(ArrayChangeEvent(updated: [index]))
     }
 }
 
@@ -201,6 +202,10 @@ extension ObservableArray: Sequence {
                 arrayDidChange(ArrayChangeEvent(updated: [index]))
             }
         }
+    }
+    
+    public func update(index: Int) {
+        arrayDidChange(ArrayChangeEvent(updated: [index]))
     }
 
     public subscript(bounds: Range<Int>) -> ArraySlice<Element> {
