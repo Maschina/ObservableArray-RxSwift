@@ -90,6 +90,12 @@ extension ObservableArray: Collection {
     public func index(after i: Int) -> Int {
         return elements.index(after: i)
     }
+    
+    /// Trigger the change event `update` for the given index
+    /// - Parameter i: Index of element
+    public func didChange(index i: Int) {
+        arrayDidChange(ArrayChangeEvent(updated: [i]))
+    }
 }
 
 extension ObservableArray: MutableCollection {
